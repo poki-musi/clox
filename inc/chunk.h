@@ -15,6 +15,17 @@ typedef enum
   OP_DIV,
 } OpCode;
 
+static const int OFFSET_OP[] = {
+    1, /* OP_RET, */
+    2, /* OP_CONST, */
+    3, /* OP_CONST_LONG, */
+    1, /* OP_NEG, */
+    1, /* OP_ADD, */
+    1, /* OP_SUB, */
+    1, /* OP_MUL, */
+    1, /* OP_DIV, */
+};
+
 typedef struct
 {
   int count;
@@ -28,7 +39,10 @@ typedef struct
 void init_chunk(Chunk *);
 void free_chunk(Chunk *);
 int add_const(Chunk *, Value);
-void add_nl(Chunk *);
+
+void write_nl(Chunk *);
+void write_nl_multiple(Chunk *, unsigned int);
+int count_skip_nl(Chunk *, int, size_t *);
 int chunk_line(Chunk *, size_t);
 
 void write_byte(Chunk *, uint8_t);

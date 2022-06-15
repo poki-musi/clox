@@ -12,16 +12,9 @@ void show_chunk(Chunk *chunk, const char *name)
 {
   printf("== %s ==\n", name);
 
-  int cur_line = 1;
   int line_count = 0;
   size_t line_ptr = 0;
-
-  if (chunk->lines[0] < 0)
-  {
-    cur_line += -chunk->lines[0];
-    line_ptr++;
-  }
-
+  int cur_line = count_skip_nl(chunk, 1, &line_ptr);
   int prev_line = 0;
 
   for (int off = 0; off < chunk->count;)
@@ -33,22 +26,21 @@ void show_chunk(Chunk *chunk, const char *name)
     else
       printf("   | ");
 
+    // Increment Bytecode Pointers
     int inc = show_inst(chunk, off);
     off += inc;
     line_count += inc;
+
+    // Set current line count as the previous one
     prev_line = cur_line;
 
+    // Increment current line count if at end of line
+    // then count up any extra empty lines
     if (line_count >= chunk->lines[line_ptr])
     {
       line_count = 0;
       line_ptr++;
-      cur_line += 1;
-
-      if (chunk->lines[line_ptr] < 0)
-      {
-        cur_line += -chunk->lines[0];
-        line_ptr++;
-      }
+      cur_line = count_skip_nl(chunk, cur_line + 1, &line_ptr);
     }
   }
 }

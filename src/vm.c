@@ -1,34 +1,68 @@
-#include "value.h"
 #include <stdio.h>
+#include <stdlib.h>
+
+#define DEBUG_TRACE_EXEC
 
 #include "debug.h"
+#include "mem.h"
 #include "vm.h"
-#include <unistd.h>
+#include "compiler.h"
 
 VM vm;
 
 static InterpretResult run();
 static void reset_stack();
 
-void init_vm() { reset_stack(); }
+void init_vm()
+{
+  vm.stack = NULL;
+  vm.stack_count = 0;
+  vm.stack_size = 0;
+  reset_stack();
+}
 
-static void reset_stack() { vm.top = vm.stack; }
+static void reset_stack() { vm.stack_count = 0; }
 
-void free_vm() {}
+void free_vm() { free(vm.stack); }
 
 void push(Value value)
 {
-  *vm.top = value;
-  vm.top++;
+  if (vm.stack_size < vm.stack_count + 1)
+  {
+    int old_cap = vm.stack_size;
+    vm.stack_size = GROW_CAPACITY(old_cap);
+    vm.stack = GROW_ARRAY(Value, vm.stack, old_cap, vm.stack_size);
+  }
+
+  vm.stack[vm.stack_count] = value;
+  vm.stack_count++;
 }
 
+#define VM_STACK_DEGROW 0.5
 Value pop()
 {
-  vm.top--;
-  return *vm.top;
+  Value ret = vm.stack[vm.stack_count - 1];
+  vm.stack_count--;
+
+  if (vm.stack_count < VM_STACK_DEGROW * vm.stack_size)
+  {
+    int old_cap = vm.stack_size;
+    vm.stack_size = REDUCE_CAPACITY(old_cap);
+    vm.stack = GROW_ARRAY(Value, vm.stack, old_cap, vm.stack_size);
+  }
+
+  return ret;
 }
 
-InterpretResult interpret(Chunk *chunk)
+Value unsafe_prev_peek() { return vm.stack[vm.stack_count]; }
+
+InterpretResult interpret(const char *source)
+{
+  compile(source);
+  return INTERPRET_OK;
+}
+
+InterpretResult interpret_chunk(Chunk *chunk)
 {
   vm.chunk = chunk;
   vm.ip = vm.chunk->code;
@@ -38,25 +72,25 @@ InterpretResult interpret(Chunk *chunk)
 static InterpretResult run()
 {
 #define READ_BYTE() (*vm.ip++)
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
-#define READ_CONSTANT_LONG()                                                   \
-  (vm.chunk->constants.values[READ_BYTE() + (READ_BYTE() << 8)])
+#define READ_CONSTANT(ptr) (vm.chunk->constants.values[ptr])
 #define BINARY_OP(op)                                                          \
   do                                                                           \
   {                                                                            \
-    vm.top--;                                                                  \
-    vm.top[-1] = vm.top[-1] op * vm.top;                                       \
+    Value second = pop();                                                      \
+    Value first = pop();                                                       \
+    push(first op second);                                                      \
   }                                                                            \
   while (false)
 
   for (;;)
   {
+
 #ifdef DEBUG_TRACE_EXEC
     printf("          ");
-    for (Value *slot = vm.stack; slot < vm.top; slot++)
+    for (size_t i = 0; i < vm.stack_count; i++)
     {
       printf("[ ");
-      print_value(*slot);
+      print_value(vm.stack[i]);
       printf(" ]");
     }
     printf("\n");
@@ -72,16 +106,20 @@ static InterpretResult run()
       return INTERPRET_OK;
 
     case OP_CONST:
-      push(READ_CONSTANT());
+      push(READ_CONSTANT(READ_BYTE()));
       break;
 
     case OP_CONST_LONG:
-      push(READ_CONSTANT_LONG());
-      break;
+    {
+      int ptr_1 = READ_BYTE();
+      int ptr_2 = ((int)READ_BYTE()) << 8;
+      push(READ_CONSTANT(ptr_1 + ptr_2));
+    }
+    break;
 
     case OP_NEG:
     {
-      Value *top = vm.top - 1;
+      Value *top = &vm.stack[vm.stack_count - 1];
       *top = -*top;
     }
     break;

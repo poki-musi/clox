@@ -1,16 +1,15 @@
 #pragma once
 
 #include "common.h"
-#include "chunk.h"
 #include "value.h"
-
-#define STACK_MAX 256
+#include "chunk.h"
 
 typedef struct {
   Chunk *chunk;
   uint8_t *ip;
-  Value stack[STACK_MAX];
-  Value *top;
+  Value *stack;
+  size_t stack_count;
+  size_t stack_size;
 } VM;
 
 typedef enum {
@@ -22,6 +21,8 @@ typedef enum {
 void init_vm();
 void free_vm();
 
-InterpretResult interpret(Chunk *);
+InterpretResult interpret(const char *);
+InterpretResult interpret_chunk(Chunk *);
 void push(Value);
 Value pop();
+Value unsafe_prev_peek();
