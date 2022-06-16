@@ -1,3 +1,6 @@
 #pragma once
 
-void compile(const char *);
+#include "chunk.h"
+
+int compile(const char *, Chunk *chunk);
+int compile_test(const char *);

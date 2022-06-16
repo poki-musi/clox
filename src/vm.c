@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define DEBUG_TRACE_EXEC
-
+#include "common.h"
+#include "chunk.h"
 #include "debug.h"
 #include "mem.h"
 #include "vm.h"
@@ -58,8 +58,21 @@ Value unsafe_prev_peek() { return vm.stack[vm.stack_count]; }
 
 InterpretResult interpret(const char *source)
 {
-  compile(source);
-  return INTERPRET_OK;
+  Chunk chunk;
+  init_chunk(&chunk);
+
+  if(compile(source, &chunk)) {
+    free_chunk(&chunk);
+    return INTERPRET_COMPILE_ERROR;
+  }
+
+  vm.chunk = &chunk;
+  vm.ip = vm.chunk->code;
+
+  InterpretResult result = run();
+
+  free_chunk(&chunk);
+  return result;
 }
 
 InterpretResult interpret_chunk(Chunk *chunk)

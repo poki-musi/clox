@@ -44,13 +44,15 @@ static void repl()
       printf("\n");
       break;
     }
+
+    interpret(line);
   }
 }
 
 static void run_file(const char *path)
 {
   char *src = read_file(path);
-  InterpretResult result = interpret_chunk(src);
+  InterpretResult result = interpret(src);
   free(src);
 
   if (result == INTERPRET_COMPILE_ERROR)

@@ -44,7 +44,7 @@ Token scan_token()
   scanner.start = scanner.current;
 
   if (at_end())
-    return make_token(TKN_ERROR);
+    return make_token(TKN_EOF);
 
   char c = advance();
 

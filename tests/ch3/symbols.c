@@ -1,7 +1,8 @@
-#pragma once
+#include <assert.h>
 
-typedef enum
-{
+#include "scanner.h"
+
+TokenType LIST[] = {
   // Single-character tokens.
   TKN_LEFT_PAREN,
   TKN_RIGHT_PAREN,
@@ -25,11 +26,6 @@ typedef enum
   TKN_LESS,
   TKN_LESS_EQUAL,
 
-  // Literals.
-  TKN_IDENTIFIER,
-  TKN_STRING,
-  TKN_NUMBER,
-
   // Keywords.
   TKN_AND,
   TKN_CLASS,
@@ -47,18 +43,19 @@ typedef enum
   TKN_TRUE,
   TKN_VAR,
   TKN_WHILE,
+};
 
-  TKN_ERROR,
-  TKN_EOF
-} TokenType;
-
-typedef struct
+int main()
 {
-  TokenType type;
-  const char *start;
-  int length;
-  int line;
-} Token;
+  init_scanner("( ) { } , . - + ; / *"
+               "! != == = > >= < <="
+               "and class else false for fn if nil or print return super this "
+               "true var while");
 
-void init_scanner(const char *);
-Token scan_token();
+  for (int i = 0; i < sizeof(LIST) / sizeof(*LIST); i++)
+  {
+    Token token = scan_token();
+    if(token.type != LIST[i])
+      exit(1);
+  }
+}
