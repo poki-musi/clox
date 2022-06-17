@@ -81,7 +81,7 @@ Token scan_token()
   case '!':
     return make_token(match('=') ? TKN_BANG_EQUAL : TKN_BANG);
   case '=':
-    return make_token(match('=') ? TKN_EQUAL : TKN_EQUAL_EQUAL);
+    return make_token(match('=') ? TKN_EQUAL_EQUAL : TKN_EQUAL);
   case '<':
     return make_token(match('=') ? TKN_LESS_EQUAL : TKN_LESS);
   case '>':

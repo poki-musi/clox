@@ -5,7 +5,7 @@ SRC_DIR := src
 TEST_DIR := tests
 
 SRCS := $(shell find $(SRC_DIR) -name *.c)
-TESTS := $(shell find $(TEST_DIR) -name *.c)
+# TESTS := $(shell find $(TEST_DIR) -name *.c)
 
 RM := rm -f
 CFLAGS := -g -Iinc/ -Wall
@@ -13,7 +13,7 @@ CFLAGS := -g -Iinc/ -Wall
 
 OBJS := $(SRCS:%=$(BUILD_DIR)/%.o)
 MAINS := $(BUILD_DIR)/$(SRC_DIR)/main.c.o
-EXEC_TESTS := $(TESTS:%=$(BUILD_DIR)/%.test.out)
+# EXEC_TESTS := $(TESTS:%=$(BUILD_DIR)/%.test.out)
 
 MKDIR_P := mkdir -p
 
@@ -33,15 +33,15 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 # --- Test Rule ---
 #
 
-test: $(EXEC_TESTS)
+# test: $(EXEC_TESTS)
 
 # Executable
-$(BUILD_DIR)/%.c.test.out: $(BUILD_DIR)/%.c.o $(filter-out $(MAINS),$(OBJS))
-	@echo
-	@echo ":: $(strip $(subst $(BUILD_DIR)/$(TEST_DIR)/, , $@)) ::"
-	@$(MKDIR_P) $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $^
-	@$@ && echo ":: PASS ::" || echo ":: FAIL ::"
+# $(BUILD_DIR)/%.c.test.out: $(BUILD_DIR)/%.c.o $(filter-out $(MAINS),$(OBJS))
+# 	@echo
+# 	@echo ":: $(strip $(subst $(BUILD_DIR)/$(TEST_DIR)/, , $@)) ::"
+# 	@$(MKDIR_P) $(dir $@)
+# 	@$(CC) $(LDFLAGS) -o $@ $^
+# 	@$@ && echo ":: PASS ::" || echo ":: FAIL ::"
 
 #
 # --- Other ---

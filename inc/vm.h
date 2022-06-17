@@ -25,4 +25,5 @@ InterpretResult interpret(const char *);
 InterpretResult interpret_chunk(Chunk *);
 void push(Value);
 Value pop();
+Value peek(int);
 Value unsafe_prev_peek();

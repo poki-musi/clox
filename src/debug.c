@@ -66,6 +66,20 @@ int show_inst(Chunk *chunk, int off)
     return simple_inst("OP_MUL", off);
   case OP_DIV:
     return simple_inst("OP_DIV", off);
+  case OP_NIL:
+    return simple_inst("OP_NIL", off);
+  case OP_FALSE:
+    return simple_inst("OP_FALSE", off);
+  case OP_TRUE:
+    return simple_inst("OP_TRUE", off);
+  case OP_NOT:
+    return simple_inst("OP_NOT", off);
+  case OP_EQUAL:
+    return simple_inst("OP_EQUAL", off);
+  case OP_GREATER:
+    return simple_inst("OP_GREATER", off);
+  case OP_LESS:
+    return simple_inst("OP_LESS", off);
   default:
     printf("Unknown opcode %d\n", inst);
     return 1;

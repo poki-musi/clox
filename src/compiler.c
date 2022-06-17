@@ -73,6 +73,7 @@ static ParseRule *get_rule(TokenType);
 
 static inline void expression();
 static inline void binary();
+static void literal();
 static void number();
 static void grouping();
 static void unary();
@@ -89,31 +90,31 @@ ParseRule RULES[] = {
     [TKN_SEMICOLON] = {NULL, NULL, PREC_NONE},
     [TKN_SLASH] = {NULL, binary, PREC_FACTOR},
     [TKN_STAR] = {NULL, binary, PREC_FACTOR},
-    [TKN_BANG] = {NULL, NULL, PREC_NONE},
-    [TKN_BANG_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TKN_BANG] = {unary, NULL, PREC_NONE},
+    [TKN_BANG_EQUAL] = {NULL, binary, PREC_EQUALITY},
     [TKN_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TKN_EQUAL_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TKN_GREATER] = {NULL, NULL, PREC_NONE},
-    [TKN_GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TKN_LESS] = {NULL, NULL, PREC_NONE},
-    [TKN_LESS_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TKN_EQUAL_EQUAL] = {NULL, binary, PREC_EQUALITY},
+    [TKN_GREATER] = {NULL, binary, PREC_COMPARISON},
+    [TKN_GREATER_EQUAL] = {NULL, binary, PREC_COMPARISON},
+    [TKN_LESS] = {NULL, binary, PREC_COMPARISON},
+    [TKN_LESS_EQUAL] = {NULL, binary, PREC_COMPARISON},
     [TKN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
     [TKN_STRING] = {NULL, NULL, PREC_NONE},
     [TKN_NUMBER] = {number, NULL, PREC_NONE},
     [TKN_AND] = {NULL, NULL, PREC_NONE},
     [TKN_CLASS] = {NULL, NULL, PREC_NONE},
     [TKN_ELSE] = {NULL, NULL, PREC_NONE},
-    [TKN_FALSE] = {NULL, NULL, PREC_NONE},
+    [TKN_FALSE] = {literal, NULL, PREC_NONE},
     [TKN_FOR] = {NULL, NULL, PREC_NONE},
     [TKN_FN] = {NULL, NULL, PREC_NONE},
     [TKN_IF] = {NULL, NULL, PREC_NONE},
-    [TKN_NIL] = {NULL, NULL, PREC_NONE},
+    [TKN_NIL] = {literal, NULL, PREC_NONE},
     [TKN_OR] = {NULL, NULL, PREC_NONE},
     [TKN_PRINT] = {NULL, NULL, PREC_NONE},
     [TKN_RETURN] = {NULL, NULL, PREC_NONE},
     [TKN_SUPER] = {NULL, NULL, PREC_NONE},
     [TKN_THIS] = {NULL, NULL, PREC_NONE},
-    [TKN_TRUE] = {NULL, NULL, PREC_NONE},
+    [TKN_TRUE] = {literal, NULL, PREC_NONE},
     [TKN_VAR] = {NULL, NULL, PREC_NONE},
     [TKN_WHILE] = {NULL, NULL, PREC_NONE},
     [TKN_ERROR] = {NULL, NULL, PREC_NONE},
@@ -223,6 +224,34 @@ static void binary()
   case TKN_SLASH:
     emit_byte(OP_DIV);
     break;
+
+  case TKN_EQUAL_EQUAL:
+    emit_byte(OP_EQUAL);
+    break;
+
+  case TKN_BANG_EQUAL:
+    emit_byte(OP_EQUAL);
+    emit_byte(OP_NEG);
+    break;
+
+  case TKN_GREATER:
+    emit_byte(OP_GREATER);
+    break;
+
+  case TKN_GREATER_EQUAL:
+    emit_byte(OP_LESS);
+    emit_byte(OP_EQUAL);
+    break;
+
+  case TKN_LESS:
+    emit_byte(OP_LESS);
+    break;
+
+  case TKN_LESS_EQUAL:
+    emit_byte(OP_GREATER);
+    emit_byte(OP_NEG);
+    break;
+
   default:
     break; // Unreachable
   }
@@ -237,7 +266,25 @@ static void number()
     return;
   }
 
-  write_constant(current_chunk(), value);
+  write_constant(current_chunk(), NUMBER_VAL(value));
+}
+
+static void literal()
+{
+  switch (parser.previous.type)
+  {
+  case TKN_FALSE:
+    emit_byte(OP_FALSE);
+    break;
+  case TKN_TRUE:
+    emit_byte(OP_TRUE);
+    break;
+  case TKN_NIL:
+    emit_byte(OP_NIL);
+    break;
+  default:
+    return; // Unreachable
+  }
 }
 
 static void grouping()
@@ -256,6 +303,9 @@ static void unary()
   {
   case TKN_MINUS:
     emit_byte(OP_NEG);
+    break;
+  case TKN_BANG:
+    emit_byte(OP_NOT);
     break;
   default:
     return; // Unreachable

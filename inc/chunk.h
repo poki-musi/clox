@@ -13,6 +13,13 @@ typedef enum
   OP_SUB,
   OP_MUL,
   OP_DIV,
+  OP_NIL,
+  OP_TRUE,
+  OP_FALSE,
+  OP_NOT,
+  OP_EQUAL,
+  OP_GREATER,
+  OP_LESS,
 } OpCode;
 
 static const int OFFSET_OP[] = {
